@@ -1,0 +1,6 @@
+{
+  "name": "CineAI - Đạo Diễn Điện Ảnh AI",
+  "description": "Ứng dụng đạo diễn phim chuyên nghiệp: phân tích kịch bản chi tiết, tạo storyboard AI, tương tác sửa cảnh, gọi AI Veo dựng phim và âm thanh, preview từng phân đoạn và ghép thành phim hoàn chỉnh.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
