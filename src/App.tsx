@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ScreenplayModal } from './components/ScreenplayModal';
 import { BreakdownView } from './components/BreakdownView';
@@ -6,12 +6,14 @@ import { StoryboardView } from './components/StoryboardView';
 import { CoDirectorChat } from './components/CoDirectorChat';
 import { ShotDirectorStudio } from './components/ShotDirectorStudio';
 import { MasterFilmSequencer } from './components/MasterFilmSequencer';
+import { ProjectsDrawer } from './components/ProjectsDrawer';
 import { ChatMessage, DirectorTab, Scene, ScreenplayProject, Shot } from './types/film';
 import { Language, TRANSLATIONS } from './locales/i18n';
 import { audioEngine } from './utils/audioEngine';
 
 // Japanese Pre-configured Sample Project
 const INITIAL_PROJECT_JA: ScreenplayProject = {
+  id: 'proj-neo-tokyo-2088',
   title: 'ネオトーキョー2088・雨の記憶',
   genre: 'サイバーパンク・ネオノワール / SF',
   style: 'ブレードランナー2049調、アナモルフィック35mm、ネオン雨、ボリュメトリックフォグ',
@@ -153,6 +155,7 @@ const INITIAL_PROJECT_JA: ScreenplayProject = {
 };
 
 const INITIAL_PROJECT_VI: ScreenplayProject = {
+  id: 'proj-sai-gon-2088',
   title: 'Hồi Ức Sài Gòn 2088',
   genre: 'Cyberpunk Neo-Noir / Khoa Học Viễn Tưởng',
   style: 'Blade Runner 2049 aesthetic, Anamorphic 35mm, Neon rain, Volumetric smoke',
@@ -165,7 +168,38 @@ const INITIAL_PROJECT_VI: ScreenplayProject = {
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ja');
-  const [project, setProject] = useState<ScreenplayProject>(INITIAL_PROJECT_JA);
+  const [project, setProject] = useState<ScreenplayProject>(() => {
+    try {
+      const saved = localStorage.getItem('cineai_current_project');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.scenes && parsed.scenes.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read project from localStorage:', e);
+    }
+    return INITIAL_PROJECT_JA;
+  });
+
+  // Saved Projects Library List State
+  const [savedProjects, setSavedProjects] = useState<ScreenplayProject[]>(() => {
+    try {
+      const savedList = localStorage.getItem('cineai_saved_projects_list');
+      if (savedList) {
+        const parsed = JSON.parse(savedList);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading saved projects list:', e);
+    }
+    return [INITIAL_PROJECT_JA, INITIAL_PROJECT_VI];
+  });
+
+  const [isProjectsDrawerOpen, setIsProjectsDrawerOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState<DirectorTab>('script');
   const [isScreenplayModalOpen, setIsScreenplayModalOpen] = useState(false);
   const [isAnalyzingScreenplay, setIsAnalyzingScreenplay] = useState(false);
@@ -173,8 +207,117 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(false);
 
   // Active shot & scene
-  const [activeShot, setActiveShot] = useState<Shot>(INITIAL_PROJECT_JA.scenes[0].shots[0]);
-  const [activeScene, setActiveScene] = useState<Scene>(INITIAL_PROJECT_JA.scenes[0]);
+  const [activeShot, setActiveShot] = useState<Shot>(() => {
+    return project.scenes[0]?.shots[0] || INITIAL_PROJECT_JA.scenes[0].shots[0];
+  });
+  const [activeScene, setActiveScene] = useState<Scene>(() => {
+    return project.scenes[0] || INITIAL_PROJECT_JA.scenes[0];
+  });
+
+  // Save current project and sync into savedProjects list
+  useEffect(() => {
+    if (!project) return;
+    try {
+      localStorage.setItem('cineai_current_project', JSON.stringify(project));
+      setSavedProjects((prevList) => {
+        const targetId = project.id || project.title;
+        const exists = prevList.some((p) => (p.id || p.title) === targetId);
+        let updatedList: ScreenplayProject[];
+        if (exists) {
+          updatedList = prevList.map((p) =>
+            (p.id || p.title) === targetId ? { ...project, updatedAt: Date.now() } : p
+          );
+        } else {
+          updatedList = [
+            { ...project, id: project.id || `proj-${Date.now()}`, updatedAt: Date.now() },
+            ...prevList,
+          ];
+        }
+        try {
+          localStorage.setItem('cineai_saved_projects_list', JSON.stringify(updatedList));
+        } catch (e) {
+          console.warn('Could not save projects list to localStorage:', e);
+        }
+        return updatedList;
+      });
+    } catch (e) {
+      console.warn('Storage error syncing project:', e);
+    }
+  }, [project]);
+
+  // Project List Handlers
+  const handleSelectProject = (selected: ScreenplayProject) => {
+    setProject(selected);
+    if (selected.scenes[0]?.shots[0]) {
+      setActiveShot(selected.scenes[0].shots[0]);
+      setActiveScene(selected.scenes[0]);
+    }
+    setCurrentTab('script');
+    audioEngine.playSlateClap();
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    setSavedProjects((prev) => {
+      const filtered = prev.filter((p) => (p.id || p.title) !== projectId);
+      try {
+        localStorage.setItem('cineai_saved_projects_list', JSON.stringify(filtered));
+      } catch (e) {
+        console.warn(e);
+      }
+      if ((project.id || project.title) === projectId && filtered.length > 0) {
+        setProject(filtered[0]);
+        if (filtered[0].scenes[0]?.shots[0]) {
+          setActiveShot(filtered[0].scenes[0].shots[0]);
+          setActiveScene(filtered[0].scenes[0]);
+        }
+      }
+      return filtered;
+    });
+  };
+
+  const handleDuplicateProject = (orig: ScreenplayProject) => {
+    const clone: ScreenplayProject = {
+      ...JSON.parse(JSON.stringify(orig)),
+      id: `proj-${Date.now()}`,
+      title: `${orig.title} ${language === 'ja' ? '(複製)' : '(Bản sao)'}`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    setSavedProjects((prev) => {
+      const updated = [clone, ...prev];
+      try {
+        localStorage.setItem('cineai_saved_projects_list', JSON.stringify(updated));
+      } catch (e) {
+        console.warn(e);
+      }
+      return updated;
+    });
+    audioEngine.playSlateClap();
+  };
+
+  const handleImportProject = (imported: ScreenplayProject) => {
+    const withMeta: ScreenplayProject = {
+      ...imported,
+      id: imported.id || `proj-${Date.now()}`,
+      createdAt: imported.createdAt || Date.now(),
+      updatedAt: Date.now(),
+    };
+    setSavedProjects((prev) => {
+      const updated = [withMeta, ...prev.filter((p) => (p.id || p.title) !== withMeta.id)];
+      try {
+        localStorage.setItem('cineai_saved_projects_list', JSON.stringify(updated));
+      } catch (e) {
+        console.warn(e);
+      }
+      return updated;
+    });
+    setProject(withMeta);
+    if (withMeta.scenes[0]?.shots[0]) {
+      setActiveShot(withMeta.scenes[0].shots[0]);
+      setActiveScene(withMeta.scenes[0]);
+    }
+    audioEngine.playSlateClap();
+  };
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -217,6 +360,7 @@ export default function App() {
 
   // Analyze raw screenplay via server endpoint
   const handleAnalyzeScreenplay = async (params: {
+    title?: string;
     screenplay: string;
     genre: string;
     style: string;
@@ -241,6 +385,12 @@ export default function App() {
       }
 
       const parsedProject: ScreenplayProject = await res.json();
+      parsedProject.id = `proj-${Date.now()}`;
+      if (params.title && params.title.trim()) {
+        parsedProject.title = params.title.trim();
+      }
+      parsedProject.createdAt = Date.now();
+      parsedProject.updatedAt = Date.now();
       parsedProject.genre = params.genre;
       parsedProject.style = params.style;
       parsedProject.pacing = params.pacing;
@@ -414,12 +564,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#08090c] text-zinc-100 flex flex-col font-sans film-grain selection:bg-amber-500 selection:text-zinc-950">
-      {/* Top Header with Language Switcher */}
+      {/* Top Header with Language Switcher & Projects Drawer */}
       <Header
         currentTab={currentTab}
         onTabChange={setCurrentTab}
         project={project}
         onOpenNewProject={() => setIsScreenplayModalOpen(true)}
+        onOpenProjectsDrawer={() => setIsProjectsDrawerOpen(true)}
+        savedProjectsCount={savedProjects.length}
         isMuted={isMuted}
         onToggleMute={handleToggleMute}
         language={language}
@@ -495,6 +647,20 @@ export default function App() {
         onClose={() => setIsScreenplayModalOpen(false)}
         onAnalyzeScreenplay={handleAnalyzeScreenplay}
         isAnalyzing={isAnalyzingScreenplay}
+        language={language}
+      />
+
+      {/* Saved Projects Library Drawer */}
+      <ProjectsDrawer
+        isOpen={isProjectsDrawerOpen}
+        onClose={() => setIsProjectsDrawerOpen(false)}
+        savedProjects={savedProjects}
+        currentProjectId={project.id || project.title}
+        onSelectProject={handleSelectProject}
+        onDeleteProject={handleDeleteProject}
+        onDuplicateProject={handleDuplicateProject}
+        onImportProject={handleImportProject}
+        onOpenNewProjectModal={() => setIsScreenplayModalOpen(true)}
         language={language}
       />
     </div>

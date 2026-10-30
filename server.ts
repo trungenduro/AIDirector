@@ -45,7 +45,7 @@ app.get('/api/ai/health', async (_req: Request, res: Response) => {
 // 1. Screenplay Breakdown & Shot Planning Endpoint
 app.post('/api/screenplay/breakdown', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { screenplay, genre, style, pacing, aspectRatio, language = 'ja' } = req.body;
+    const { screenplay, genre, style, pacing, aspectRatio, language = 'ja', title: userTitle } = req.body;
 
     if (!screenplay || typeof screenplay !== 'string' || screenplay.trim() === '') {
       res.status(400).json({ error: language === 'ja' ? '脚本テキストを入力してください' : 'Kịch bản không được để trống' });
@@ -56,6 +56,8 @@ app.post('/api/screenplay/breakdown', async (req: Request, res: Response): Promi
     let prompt = '';
     if (isJa) {
       prompt = 'あなたは世界的な映画監督および撮影監督（Director of Photography）です。\n' +
+        '重要：これは完全に独立した単独の新作映画（完全スタンドアローン作品）です。過去の作品の続編や後編ではありません。\n' +
+        (userTitle ? `作品タイトル: 「${userTitle}」\n` : '') +
         '以下の映画脚本・シナリオを分析し、プロフェッショナルな「絵コンテ・詳細カット割り撮影台帳（Detailed Shooting Script / Shot List）」を作成してください。\n\n' +
         '入力シナリオ:\n"""\n' + screenplay + '\n"""\n\n' +
         '演出設定:\n' +
@@ -64,9 +66,9 @@ app.post('/api/screenplay/breakdown', async (req: Request, res: Response): Promi
         '- テンポ / Pacing: ' + (pacing || 'Dramatic & Intense') + '\n' +
         '- アスペクト比 / Aspect Ratio: ' + (aspectRatio || '16:9') + '\n\n' +
         '分析要件:\n' +
-        '1. 映画の日本語タイトル、惹句（Logline）、監督ビジョン（Director Vision: 色彩設計、照明、キャメラワーク哲学）を出力すること。\n' +
-        '2. 1つ以上のシーン（Scene）に分割し、柱（Scene Heading）をつけること。\n' +
-        '3. 各シーンを3〜6カット（Shots）に分割し、映画文法（三分割構図、180度ルール、サイズ変化 EWS/WS -> MS -> CU/ECU）に従って構成すること。\n' +
+        '1. 映画の日本語タイトル（' + (userTitle ? `必ず「${userTitle}」を使用` : 'シナリオのタイトルを忠実に反映') + '）、惹句（Logline）、監督ビジョン（Director Vision: 色彩設計、照明、キャメラワーク哲学）を出力すること。\n' +
+        '2. シナリオの構成通りにシーン（Scene）に分割し、柱（Scene Heading）をつけること。シナリオに複数のシーン（例: シーン1〜5）がある場合は省略せず全シーンを含めること。\n' +
+        '3. 各シーンを2〜4カット（Shots）に分割し、映画文法（三分割構図、180度ルール、サイズ変化 EWS/WS -> MS -> CU/ECU）に従って構成すること。\n' +
         '4. 各カットには以下を含めること:\n' +
         '   - shotType: EWS, WS, MS, MCU, CU, ECU, OTS, または POV\n' +
         '   - cameraMovement: Static, Dolly In, Dolly Out, Pan Left, Pan Right, Tilt Up, Tilt Down, Tracking Shot, Orbit 360, Handheld Gritty, Crane Shot\n' +
@@ -81,6 +83,8 @@ app.post('/api/screenplay/breakdown', async (req: Request, res: Response): Promi
         'JSONフォーマットで返してください。';
     } else {
       prompt = 'Bạn là một Đạo diễn Điện ảnh Hàng đầu (Director of Photography & Film Director).\n' +
+        'LƯU Ý QUAN TRỌNG: Đây là một DỰ ÁN PHIM ĐỘC LẬP HOÀN TOÀN (Standalone Film), KHÔNG PHẢI phần tiếp theo (not a sequel) hay liên quan đến bất kỳ kịch bản nào trước đó.\n' +
+        (userTitle ? `Tiêu đề phim: "${userTitle}"\n` : '') +
         'Hãy phân tích kịch bản dưới đây thành một Kịch Bản Phân Cảnh Chi Tiết (Shooting Script / Shot List) chuyên nghiệp.\n\n' +
         'Kịch bản đầu vào:\n"""\n' + screenplay + '\n"""\n\n' +
         'Cấu hình đạo diễn:\n' +
@@ -89,9 +93,9 @@ app.post('/api/screenplay/breakdown', async (req: Request, res: Response): Promi
         '- Nhịp điệu / Pacing: ' + (pacing || 'Dramatic & Intense') + '\n' +
         '- Tỉ lệ khung hình / Aspect Ratio: ' + (aspectRatio || '16:9') + '\n\n' +
         'Yêu cầu phân tích:\n' +
-        '1. Đặt tên phim ngắn gọn, cuốn hút, cùng Logline và Tầm nhìn Đạo diễn (Director Vision).\n' +
-        '2. Chia thành 1 hoặc nhiều Cảnh (Scene) với tiêu đề chuẩn điện ảnh.\n' +
-        '3. Với mỗi Cảnh, chia thành từ 3 đến 6 cú máy (Shots) liên kết chặt chẽ theo ngữ pháp điện ảnh.\n' +
+        '1. Đặt tên phim (' + (userTitle ? `lấy đúng tiêu đề "${userTitle}"` : 'lấy đúng tên phim từ kịch bản') + '), cùng Logline và Tầm nhìn Đạo diễn (Director Vision).\n' +
+        '2. Phân chia đầy đủ tất cả các Cảnh (Scenes) theo đúng kịch bản gốc (nếu kịch bản có Cảnh 1 đến 5 thì phân tích trọn vẹn cả 5 cảnh, không được bỏ bớt cảnh nào).\n' +
+        '3. Với mỗi Cảnh, chia thành từ 2 đến 4 cú máy (Shots) liên kết chặt chẽ theo ngữ pháp điện ảnh.\n' +
         '4. Mỗi Shot có shotType, cameraMovement, lens, lighting, actionDescription, dialogue, veoPrompt, imagePrompt, audioDesign, duration.\n' +
         'Trả về định dạng JSON.';
     }

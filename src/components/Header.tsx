@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clapperboard, Film, Sparkles, MessageSquare, PlaySquare, Video, Volume2, VolumeX, PlusCircle, Globe } from 'lucide-react';
+import { Clapperboard, Film, Sparkles, MessageSquare, PlaySquare, Video, Volume2, VolumeX, PlusCircle, Globe, FolderOpen } from 'lucide-react';
 import { DirectorTab, ScreenplayProject } from '../types/film';
 import { Language, TRANSLATIONS } from '../locales/i18n';
 
@@ -8,6 +8,8 @@ interface HeaderProps {
   onTabChange: (tab: DirectorTab) => void;
   project: ScreenplayProject | null;
   onOpenNewProject: () => void;
+  onOpenProjectsDrawer: () => void;
+  savedProjectsCount: number;
   isMuted: boolean;
   onToggleMute: () => void;
   language: Language;
@@ -19,6 +21,8 @@ export const Header: React.FC<HeaderProps> = ({
   onTabChange,
   project,
   onOpenNewProject,
+  onOpenProjectsDrawer,
+  savedProjectsCount,
   isMuted,
   onToggleMute,
   language,
@@ -97,6 +101,21 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{language === 'ja' ? '🇯🇵 日本語' : '🇻🇳 Tiếng Việt'}</span>
           </button>
 
+          {/* Saved Projects Library Button */}
+          <button
+            onClick={onOpenProjectsDrawer}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-semibold text-zinc-200 transition-colors shadow-sm"
+            title={t.projectsListBtn}
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">{t.projectsListBtn}</span>
+            {savedProjectsCount > 0 && (
+              <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono-code text-[10px] font-bold border border-amber-500/30">
+                {savedProjectsCount}
+              </span>
+            )}
+          </button>
+
           {/* Sound Mute Toggle */}
           <button
             onClick={onToggleMute}
@@ -113,9 +132,9 @@ export const Header: React.FC<HeaderProps> = ({
           {/* New Project / Screenplay */}
           <button
             onClick={onOpenNewProject}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-medium text-white transition-all shadow-sm"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20"
           >
-            <PlusCircle className="w-4 h-4 text-amber-400" />
+            <PlusCircle className="w-4 h-4" />
             <span>{t.newScriptBtn}</span>
           </button>
         </div>

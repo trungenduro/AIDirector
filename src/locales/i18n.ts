@@ -110,6 +110,21 @@ export interface Translations {
   totalDurationLabel: string;
   nowPlayingLabel: string;
   backToStudioBtn: string;
+
+  // Projects Library
+  projectsListBtn: string;
+  projectsDrawerTitle: string;
+  projectsDrawerSubtitle: string;
+  loadProjectBtn: string;
+  duplicateProjectBtn: string;
+  deleteProjectBtn: string;
+  exportJsonBtn: string;
+  importJsonBtn: string;
+  noSavedProjects: string;
+  activeBadge: string;
+  confirmDelete: string;
+  saveCurrentBtn: string;
+  savedNotice: string;
 }
 
 export const TRANSLATIONS: Record<Language, Translations> = {
@@ -223,6 +238,20 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     totalDurationLabel: '総再生時間',
     nowPlayingLabel: '再生中:',
     backToStudioBtn: 'スタジオに戻ってこのカットを再撮影',
+
+    projectsListBtn: '制作プロジェクト一覧',
+    projectsDrawerTitle: '映画監督プロジェクト一覧',
+    projectsDrawerSubtitle: '過去に制作・分析したプロジェクトを確認・再編集・書き出しできます',
+    loadProjectBtn: 'このプロジェクトを開いて編集',
+    duplicateProjectBtn: '複製',
+    deleteProjectBtn: '削除',
+    exportJsonBtn: 'プロジェクト出力 (.json)',
+    importJsonBtn: 'プロジェクト読込 (.json)',
+    noSavedProjects: '保存済みのプロジェクトはありません。新規作成してください。',
+    activeBadge: '編集中',
+    confirmDelete: 'この制作プロジェクトを削除してもよろしいですか？',
+    saveCurrentBtn: 'プロジェクトを保存',
+    savedNotice: 'プロジェクトを保存しました',
   },
   vi: {
     appTitle: 'CINEAI STUDIO',
@@ -334,5 +363,19 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     totalDurationLabel: 'Tổng thời lượng',
     nowPlayingLabel: 'Đang phát:',
     backToStudioBtn: 'Quay lại Studio dựng phân đoạn này',
+
+    projectsListBtn: 'Dự Án Đã Làm',
+    projectsDrawerTitle: 'Danh Sách Dự Án Đạo Diễn',
+    projectsDrawerSubtitle: 'Xem lại toàn bộ các dự án phim đã làm, mở ra chỉnh sửa tiếp hoặc tải về',
+    loadProjectBtn: 'Mở Chỉnh Sửa Dự Án Này',
+    duplicateProjectBtn: 'Nhân bản',
+    deleteProjectBtn: 'Xóa',
+    exportJsonBtn: 'Xuất File Dự Án (.json)',
+    importJsonBtn: 'Nhập File Dự Án (.json)',
+    noSavedProjects: 'Chưa có dự án nào được lưu. Hãy bấm "Kịch bản mới" để bắt đầu bộ phim đầu tiên!',
+    activeBadge: 'Đang mở',
+    confirmDelete: 'Bạn có chắc chắn muốn xóa dự án này khỏi danh sách không?',
+    saveCurrentBtn: 'Lưu dự án hiện tại',
+    savedNotice: 'Đã lưu dự án vào danh sách',
   },
 };

@@ -365,6 +365,27 @@ export const ShotDirectorStudio: React.FC<ShotDirectorStudioProps> = ({
             </div>
           </div>
 
+          {/* Active Shot Download Card if Real Video Exists */}
+          {activeShot.videoUrl && (
+            <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between gap-3 shadow">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>
+                  {language === 'ja'
+                    ? `カット #${currentShotIndex + 1} のVeo動画が生成完了・保存されています`
+                    : `Cú máy #${currentShotIndex + 1} đã có video Veo hoàn tất và lưu trữ`}
+                </span>
+              </div>
+              <a
+                href={activeShot.videoUrl}
+                download={`${project.title.replace(/\s+/g, '_')}_Scene${activeShot.sceneNumber}_Shot${activeShot.shotNumber}.mp4`}
+                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow"
+              >
+                <span>{language === 'ja' ? '動画を保存 (.mp4)' : 'Tải Video Cú Máy Này (.mp4)'}</span>
+              </a>
+            </div>
+          )}
+
           {/* Veo / Studio Notice Banner */}
           {veoNotice && (
             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2.5 leading-relaxed">

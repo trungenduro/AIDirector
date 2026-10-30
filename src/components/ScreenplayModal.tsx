@@ -8,6 +8,7 @@ interface ScreenplayModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAnalyzeScreenplay: (params: {
+    title?: string;
     screenplay: string;
     genre: string;
     style: string;
@@ -35,6 +36,7 @@ export const ScreenplayModal: React.FC<ScreenplayModalProps> = ({
   const t = TRANSLATIONS[language];
   const samples = getSampleScreenplays(language);
   const [selectedSample, setSelectedSample] = useState<SampleScreenplay>(samples[0]);
+  const [title, setTitle] = useState<string>(samples[0].title);
   const [screenplayText, setScreenplayText] = useState<string>(samples[0].content);
   const [genre, setGenre] = useState<string>(samples[0].genre);
   const [style, setStyle] = useState<string>(samples[0].style);
@@ -46,6 +48,7 @@ export const ScreenplayModal: React.FC<ScreenplayModalProps> = ({
     const newSamples = getSampleScreenplays(language);
     if (newSamples.length > 0) {
       setSelectedSample(newSamples[0]);
+      setTitle(newSamples[0].title);
       setScreenplayText(newSamples[0].content);
       setGenre(newSamples[0].genre);
       setStyle(newSamples[0].style);
@@ -58,6 +61,7 @@ export const ScreenplayModal: React.FC<ScreenplayModalProps> = ({
 
   const handleSelectSample = (sample: SampleScreenplay) => {
     setSelectedSample(sample);
+    setTitle(sample.title);
     setScreenplayText(sample.content);
     setGenre(sample.genre);
     setStyle(sample.style);
@@ -70,6 +74,7 @@ export const ScreenplayModal: React.FC<ScreenplayModalProps> = ({
     if (!screenplayText.trim()) return;
     setQuoteIdx(Math.floor(Math.random() * DIRECTOR_QUOTES.length));
     await onAnalyzeScreenplay({
+      title,
       screenplay: screenplayText,
       genre,
       style,
@@ -112,7 +117,7 @@ export const ScreenplayModal: React.FC<ScreenplayModalProps> = ({
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
               {t.sampleScriptsLabel}
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5">
               {samples.map((s) => {
                 const isSelected = selectedSample.id === s.id;
                 return (
@@ -141,6 +146,26 @@ export const ScreenplayModal: React.FC<ScreenplayModalProps> = ({
                 );
               })}
             </div>
+          </div>
+
+          {/* Project Title Input */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 block mb-1.5 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Film className="w-3.5 h-3.5 text-amber-400" />
+                {language === 'ja' ? '作品タイトル（独立した映画プロジェクト）' : 'Tên dự án phim (Phim độc lập riêng biệt)'}
+              </span>
+              <span className="text-[10px] text-emerald-400 font-mono-code">
+                {language === 'ja' ? '※独立プロジェクトとして作成' : '※ Tạo dưới dạng dự án riêng biệt'}
+              </span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={language === 'ja' ? '例: いつか使うかもしれないだろ！' : 'Ví dụ: Biết Đâu Lại Xài!'}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-amber-300 font-cinematic font-bold focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all placeholder-zinc-600"
+            />
           </div>
 
           {/* Screenplay Text Area */}

@@ -59,6 +59,7 @@ export interface Scene {
 }
 
 export interface ScreenplayProject {
+  id?: string;
   title: string;
   logline: string;
   synopsis?: string;
@@ -68,6 +69,20 @@ export interface ScreenplayProject {
   pacing: string;
   aspectRatio: '16:9' | '2.39:1' | '9:16';
   scenes: Scene[];
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface SavedProjectMeta {
+  id: string;
+  title: string;
+  genre: string;
+  aspectRatio: string;
+  scenesCount: number;
+  shotsCount: number;
+  totalDuration: number;
+  coverImage?: string;
+  updatedAt: number;
 }
 
 export interface ChatMessage {

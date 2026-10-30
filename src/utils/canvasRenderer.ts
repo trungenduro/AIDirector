@@ -9,6 +9,7 @@ export interface RenderShotOptions {
   showGrid?: boolean;
   timecodeStr?: string;
   loadedImage?: HTMLImageElement | null;
+  loadedVideo?: HTMLVideoElement | null;
 }
 
 /**
@@ -23,6 +24,7 @@ export function renderCinematicFrame({
   showGrid = false,
   timecodeStr = '00:00:00:00',
   loadedImage = null,
+  loadedVideo = null,
 }: RenderShotOptions) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -84,8 +86,28 @@ export function renderCinematicFrame({
   ctx.scale(scale, scale);
   ctx.translate(-w / 2 + offsetX, -h / 2 + offsetY);
 
-  // If a real storyboard image or user sketch exists, render it
-  if (loadedImage && loadedImage.complete && loadedImage.naturalWidth > 0) {
+  // If a real video exists, draw video frame
+  if (loadedVideo && loadedVideo.videoWidth > 0) {
+    const vidRatio = loadedVideo.videoWidth / loadedVideo.videoHeight;
+    const canvasRatio = w / h;
+    let dw = w;
+    let dh = h;
+    let dx = 0;
+    let dy = 0;
+
+    if (canvasRatio > vidRatio) {
+      dw = w;
+      dh = w / vidRatio;
+      dy = (h - dh) / 2;
+    } else {
+      dh = h;
+      dw = h * vidRatio;
+      dx = (w - dw) / 2;
+    }
+
+    ctx.drawImage(loadedVideo, dx, dy, dw, dh);
+  } else if (loadedImage && loadedImage.complete && loadedImage.naturalWidth > 0) {
+    // If a real storyboard image or user sketch exists, render it
     const imgRatio = loadedImage.naturalWidth / loadedImage.naturalHeight;
     const canvasRatio = w / h;
     let dw = w;
